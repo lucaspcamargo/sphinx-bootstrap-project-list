@@ -12,6 +12,7 @@ This project takes a JSON data source describing multiple projects and generates
 - **Images**: Meant to be used with images. Falls back to a global placeholder if not provided.
 - **Internal or External Links**: Add external links or resources to each project entry.
 - **Text Fallback**: Fallback to a list of links on non-HTML output.
+- **Tech Stack Tags**: Optional `tech` array per project, rendered inline next to the last-updated date.
 
 ## Usage
 
@@ -36,6 +37,7 @@ Below is an example `projects.json` file. The JSON is a dictionary where each ke
     "index_path": "https://github.com/example/project-alpha",
     "last_mod": "2025-08-03T03:41:52Z",
     "last_mod_fmt": "August 03, 2025",
+    "tech": ["C++", "CMake"]
   },
   "beta": {
     "nice_title": "Beta Tool",
@@ -44,6 +46,7 @@ Below is an example `projects.json` file. The JSON is a dictionary where each ke
     "image_path": "projects/beta_logo.png",
     "last_mod": "2025-07-15T14:22:10Z",
     "last_mod_fmt": "July 15, 2025",
+    "tech": ["Python", "Sphinx"]
   }
 }
 ```
