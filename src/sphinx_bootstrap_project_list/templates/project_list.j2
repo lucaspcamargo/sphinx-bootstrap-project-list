@@ -12,7 +12,7 @@
                 <a href="{{ item.index_url }}" class="stretched-link"></a>
                 <h5 class="card-title" style="margin-top: 0">{{ item.nice_title }}</h5>
                 <p class="card-text">{{ item.descr }}<br/>
-                    <small class="text-muted">Updated on {{ item.last_mod_fmt }}</small>
+                    <small class="text-muted">Updated on {{ item.last_mod_fmt }}{% if item.tech %} &middot; {{ item.tech | join(' &middot; ') }}{% endif %}</small>
                 </p>
             </div>
         </div>
