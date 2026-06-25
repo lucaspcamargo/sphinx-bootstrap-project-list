@@ -13,6 +13,7 @@ This project takes a JSON data source describing multiple projects and generates
 - **Internal or External Links**: Add external links or resources to each project entry.
 - **Text Fallback**: Fallback to a list of links on non-HTML output.
 - **Tech Stack Tags**: Optional `tech` array per project, rendered inline next to the last-updated date.
+- **Hidden Flag**: Set `"hidden": true` on any entry to exclude it from the rendered list without removing it from the data file.
 
 ## Usage
 
@@ -42,11 +43,17 @@ Below is an example `projects.json` file. The JSON is a dictionary where each ke
   "beta": {
     "nice_title": "Beta Tool",
     "descr": "Another example project.",
-    "index_path": "projects/beta.md",   
+    "index_path": "projects/beta.md",
     "image_path": "projects/beta_logo.png",
     "last_mod": "2025-07-15T14:22:10Z",
     "last_mod_fmt": "July 15, 2025",
     "tech": ["Python", "Sphinx"]
+  },
+  "wip": {
+    "hidden": true,
+    "nice_title": "Work in Progress",
+    "descr": "Not ready to show yet.",
+    "index_path": "projects/wip.md"
   }
 }
 ```
