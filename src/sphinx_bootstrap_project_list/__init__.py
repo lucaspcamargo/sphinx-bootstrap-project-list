@@ -53,7 +53,12 @@ def _make_thumb(src_path, max_size, cache_dir):
 
             if not os.path.exists(thumb_path):
                 img_resized = img.resize((new_w, new_h), Image.LANCZOS)
-                img_resized.save(thumb_path)
+                save_kwargs = {}
+                if ext in {'.png'}:
+                    save_kwargs = {'compress_level': 9}
+                elif ext in {'.jpg', '.jpeg'}:
+                    save_kwargs = {'quality': 95, 'optimize': True}
+                img_resized.save(thumb_path, **save_kwargs)
                 print(f"[bspl] generated thumbnail {thumb_path} ({w}x{h} -> {new_w}x{new_h})")
 
             return thumb_path
