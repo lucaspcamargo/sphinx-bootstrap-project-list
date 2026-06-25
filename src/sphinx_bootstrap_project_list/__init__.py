@@ -1,6 +1,8 @@
 from sphinx.application import Sphinx
 from sphinx.util.docutils import SphinxDirective
+from sphinx.addnodes import toctree as TocTreeNode
 from docutils import nodes
+from docutils.parsers.rst import directives
 from docutils.writers.html5_polyglot import HTMLTranslator as html_translator
 from jinja2 import Template
 from importlib.resources import files
@@ -136,7 +138,9 @@ def TextualDepart(writer, node):
 
 class BSPLDirective(SphinxDirective):
     option_spec = {
-        'json': str
+        'json': str,
+        'toctree-caption': directives.unchanged,
+        'no-toctree': directives.flag,
     }
 
     has_content = True
@@ -215,7 +219,36 @@ class BSPLDirective(SphinxDirective):
 
         node['projects'] = content
 
-        return [node]
+        if 'no-toctree' in self.options:
+            return [node]
+
+        # emit a hidden toctree so Sphinx picks up project pages automatically
+        # order matches the template: by last_mod descending
+        sorted_items = sorted(content.items(), key=lambda kv: kv[1].get('last_mod', ''), reverse=True)
+        toc_entries = []
+        for k, v in sorted_items:
+            index_path = v.get('index_path', '')
+            if not index_path or index_path.startswith('http'):
+                continue
+            if index_path.endswith('.md'):
+                index_path = index_path[:-3]
+            abs_doc = os.path.normpath(os.path.join(json_dir, index_path))
+            docname = os.path.relpath(abs_doc, env.srcdir).replace(os.sep, '/')
+            toc_entries.append((None, docname))
+
+        toc = TocTreeNode()
+        toc['parent']       = env.docname
+        toc['entries']      = toc_entries
+        toc['includefiles'] = [e[1] for e in toc_entries]
+        toc['maxdepth']     = 1
+        toc['caption']      = self.options.get('toctree-caption', None)
+        toc['hidden']       = True
+        toc['glob']         = False
+        toc['reversed']     = False
+        toc['titlesonly']   = False
+        toc['numbered']     = 0
+
+        return [toc, node]
 
 
 def setup(app:Sphinx):

@@ -14,6 +14,7 @@ This project takes a JSON data source describing multiple projects and generates
 - **Text Fallback**: Fallback to a list of links on non-HTML output.
 - **Tech Stack Tags**: Optional `tech` array per project, rendered inline next to the last-updated date.
 - **Hidden Flag**: Set `"hidden": true` on any entry to exclude it from the rendered list without removing it from the data file.
+- **Automatic Toctree**: Emits a hidden Sphinx toctree for all listed projects automatically, so no manual glob is needed. Configurable via directive options.
 
 ## Usage
 
@@ -22,9 +23,23 @@ To use the Sphinx Bootstrap Project List, add the following directive to your re
 ```rst
 .. bspl::
     :json: projects.json
+    :toctree-caption: Projects
 ```
 
-More options to come, patches welcome always.
+Or in MyST markdown:
+
+```md
+​```{bspl}
+   :json: projects.json
+   :toctree-caption: Projects
+​```
+```
+
+### Directive options
+
+- `:json:` — path to the JSON data file (required).
+- `:toctree-caption:` — caption for the auto-generated hidden toctree (e.g. `Projects`). If omitted, no caption is set.
+- `:no-toctree:` — flag to suppress automatic toctree generation entirely, for cases where you manage the toctree manually.
 
 ### Example JSON File
 
