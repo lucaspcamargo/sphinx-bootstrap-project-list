@@ -174,16 +174,31 @@ class BSPLDirective(SphinxDirective):
         for k,v in content.items():
             if 'image_path' in v:
                 image_path = v['image_path']
-                if not (image_path.startswith('http') or image_path.startswith('/')):
+                needs_img_node = True
+
+                if image_path.startswith('http'):
+                    # remote URL — use as-is, no pipeline
+                    needs_img_node = False
+                elif image_path.startswith('/'):
+                    abs_image_path = os.path.join(env.srcdir, image_path.lstrip('/'))
+                    thumb = _make_thumb(abs_image_path, max_thumb_size, thumb_cache)
+                    if thumb != abs_image_path:
+                        image_path = thumb  # thumbnail generated, needs pipeline
+                    else:
+                        # already in _static, reference directly to avoid pipeline collisions
+                        needs_img_node = False
+                else:
                     abs_image_path = os.path.join(json_dir, image_path)
                     image_path = _make_thumb(abs_image_path, max_thumb_size, thumb_cache)
+
                 v['image_path_rel'] = image_path
-                print("[bspl] image_path_rel for", k, "is", v['image_path_rel'])
-                img_node = nodes.image(rawsource=v['image_path_rel'])
-                img_node['uri'] = v['image_path_rel']
-                img_node['alt'] = v.get('image_alt', 'Project Image for ' + k)
-                img_node["proj_key"] = k
-                node.append(img_node)
+                print("[bspl] image_path_rel for", k, "is", v['image_path_rel'], "(img_node:", needs_img_node, ")")
+                if needs_img_node:
+                    img_node = nodes.image(rawsource=v['image_path_rel'])
+                    img_node['uri'] = v['image_path_rel']
+                    img_node['alt'] = v.get('image_alt', 'Project Image for ' + k)
+                    img_node["proj_key"] = k
+                    node.append(img_node)
             if 'index_path' in v:
                 index_path = v['index_path']
                 if index_path.endswith('.md'):
