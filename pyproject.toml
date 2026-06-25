@@ -26,6 +26,8 @@ dependencies = [
 
 dynamic = ["version"]
 
+[project.optional-dependencies]
+thumbs = ["Pillow"]
 
 [project.urls]
 homepage = "https://camargo.eng.br/tools/sphinx-bootstrap-project-list/README.html"

@@ -17,6 +17,50 @@ __url__ = 'https://camargo.eng.br'
 __description__ = 'Sphinx extension for rendering nice-looking project lists using Bootstrap 5'
 __keywords__ = 'documentation, sphinx, extension, bootstrap, html'
 
+_THUMB_CACHE_DIR = '.bspl_thumbs'
+_SKIP_EXTENSIONS = {'.svg', '.gif'}
+
+
+def _make_thumb(src_path, max_size, cache_dir):
+    """Return a path to a thumbnail of src_path, generating one if the image exceeds max_size.
+
+    Returns src_path unchanged if the image is already small enough, is an
+    unsupported format, or if Pillow is unavailable.
+    """
+    ext = os.path.splitext(src_path)[1].lower()
+    if ext in _SKIP_EXTENSIONS:
+        return src_path
+
+    try:
+        from PIL import Image
+    except ImportError:
+        print("[bspl] Pillow not installed, skipping thumbnail generation")
+        return src_path
+
+    try:
+        with Image.open(src_path) as img:
+            w, h = img.size
+            if w <= max_size and h <= max_size:
+                return src_path
+
+            scale = max_size / max(w, h)
+            new_w, new_h = int(w * scale), int(h * scale)
+
+            os.makedirs(cache_dir, exist_ok=True)
+            base = os.path.splitext(os.path.basename(src_path))[0]
+            thumb_name = f"{base}_thumb_{new_w}x{new_h}{ext}"
+            thumb_path = os.path.join(cache_dir, thumb_name)
+
+            if not os.path.exists(thumb_path):
+                img_resized = img.resize((new_w, new_h), Image.LANCZOS)
+                img_resized.save(thumb_path)
+                print(f"[bspl] generated thumbnail {thumb_path} ({w}x{h} -> {new_w}x{new_h})")
+
+            return thumb_path
+    except Exception as e:
+        print(f"[bspl] Warning: could not generate thumbnail for {src_path}: {e}")
+        return src_path
+
 
 class BSPLNode(nodes.General, nodes.Element):
 
@@ -64,7 +108,7 @@ class BSPLNode(nodes.General, nodes.Element):
         translator.body.append(
             template.render(
                 projects=projects))
-        
+
         # ignore children and don't even depart node
         # we are done
         raise nodes.SkipNode
@@ -87,7 +131,7 @@ def TextualDepart(writer, node):
 
 class BSPLDirective(SphinxDirective):
     option_spec = {
-        'json': str 
+        'json': str
     }
 
     has_content = True
@@ -100,7 +144,10 @@ class BSPLDirective(SphinxDirective):
                 content = json.load(f)
         else:
             raise ValueError("No JSON file provided in options.")
-                
+
+        max_thumb_size = env.config.bspl_max_thumb_size
+        json_dir = os.path.dirname(json_file)
+        thumb_cache = os.path.join(json_dir, _THUMB_CACHE_DIR)
 
         # initialize image urls
         for k, v in content.items():
@@ -118,11 +165,14 @@ class BSPLDirective(SphinxDirective):
 
 
         # add necessary image and link nodes here
-        # during rendering visit, use the generated urls 
+        # during rendering visit, use the generated urls
         for k,v in content.items():
             if 'image_path' in v:
                 image_path = v['image_path']
-                v['image_path_rel'] = os.path.join(os.path.dirname(json_file), image_path) if not (image_path.startswith('http') or image_path.startswith('/')) else image_path
+                if not (image_path.startswith('http') or image_path.startswith('/')):
+                    abs_image_path = os.path.join(json_dir, image_path)
+                    image_path = _make_thumb(abs_image_path, max_thumb_size, thumb_cache)
+                v['image_path_rel'] = image_path
                 print("[bspl] image_path_rel for", k, "is", v['image_path_rel'])
                 img_node = nodes.image(rawsource=v['image_path_rel'])
                 img_node['uri'] = v['image_path_rel']
@@ -148,14 +198,15 @@ class BSPLDirective(SphinxDirective):
 
 def setup(app:Sphinx):
     app.add_config_value("bspl_default_image", None, '')
+    app.add_config_value("bspl_max_thumb_size", 400, '')
     app.add_directive('bspl', BSPLDirective)
-    app.add_node(BSPLNode, 
+    app.add_node(BSPLNode,
                  html=(BSPLNode.html_visit, BSPLNode.html_depart),
-                 text=(TextualVisit, TextualDepart), 
+                 text=(TextualVisit, TextualDepart),
                  gemini=(TextualVisit, TextualDepart),
                  latex=(TextualVisit, TextualDepart),
     )
-    
+
     return {
         'version': '0.1',
         'parallel_read_safe': True,

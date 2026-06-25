@@ -9,7 +9,7 @@ This project takes a JSON data source describing multiple projects and generates
 ## Features
 
 - **JSON Data Source**: Specify the path or URL to your JSON file containing project information.
-- **Images**: Meant to be used with images. Falls back to a global placeholder if not provided.
+- **Images**: Meant to be used with images. Falls back to a global placeholder if not provided. Supports automatic thumbnail generation for large images (requires Pillow).
 - **Internal or External Links**: Add external links or resources to each project entry.
 - **Text Fallback**: Fallback to a list of links on non-HTML output.
 - **Tech Stack Tags**: Optional `tech` array per project, rendered inline next to the last-updated date.
@@ -55,13 +55,25 @@ Paths are relative to the json file location, unless absolute. Can be a referenc
 
 ## Configuration
 
-To configure the Sphinx Bootstrap Project List extension in your `conf.py`, add the following settings (with a default image):
+Add any of the following to your `conf.py`:
 
 ```python
-bspl_default_image = '_static/default_project_image.png_'
+bspl_default_image = '_static/default_project_image.png'
+bspl_max_thumb_size = 400
 ```
 
-- `bspl_default_image`: URL or path to a default image for projects without a specified image.
+- `bspl_default_image`: Path or URL to a fallback image for projects without a specified `image_path`.
+- `bspl_max_thumb_size`: Maximum pixel size (in either dimension) before a thumbnail is generated. Defaults to `400`. Set to `0` to disable. Thumbnails are cached in a `.bspl_thumbs/` directory next to the JSON file and reused across builds. SVGs and remote images are never resized.
+
+### Thumbnail generation
+
+Thumbnail generation requires [Pillow](https://python-pillow.org/). Install it alongside the extension:
+
+```
+pip install sphinx-bootstrap-project-list[thumbs]
+```
+
+Or add `Pillow` directly to your project's dependencies. If Pillow is not installed, images are used as-is and a warning is printed at build time.
 
 More options to come in the future, patches always welcome.
 
