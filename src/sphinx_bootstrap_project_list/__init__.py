@@ -150,6 +150,8 @@ class BSPLDirective(SphinxDirective):
         else:
             raise ValueError("No JSON file provided in options.")
 
+        content = {k: v for k, v in content.items() if not v.get('hidden')}
+
         max_thumb_size = env.config.bspl_max_thumb_size
         json_dir = os.path.dirname(json_file)
         thumb_cache = os.path.join(json_dir, _THUMB_CACHE_DIR)
@@ -220,6 +222,10 @@ def setup(app:Sphinx):
     app.add_config_value("bspl_default_image", None, '')
     app.add_config_value("bspl_max_thumb_size", 400, '')
     app.add_directive('bspl', BSPLDirective)
+    app.connect('builder-inited', lambda app: app.config.html_static_path.__iadd__(
+        [str(files(__package__).joinpath('static'))]
+    ))
+    app.add_css_file('bspl.css')
     app.add_node(BSPLNode,
                  html=(BSPLNode.html_visit, BSPLNode.html_depart),
                  text=(TextualVisit, TextualDepart),
